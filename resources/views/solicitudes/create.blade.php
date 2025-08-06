@@ -1,221 +1,124 @@
 {{-- resources/views/solicitudes/create.blade.php --}}
 @extends('layouts.app')
 
-@section('header')
-  <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-    Formulario de Solicitud de Préstamo
-  </h2>
-@endsection
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+@endpush
 
 @section('content')
-  <div class="container py-5">
-    <div class="card shadow rounded">
-      <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">Ingrese los datos de su préstamo</h4>
-      </div>
-      <div class="card-body">
-        {{-- Errores --}}
-        @if ($errors->any())
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              @foreach ($errors->all() as $err)
-                <li>{{ $err }}</li>
-              @endforeach
-            </ul>
+<div class="solicitud-card-wrapper">
+  <div class="solicitud-card">
+    <h2 class="solicitud-title">Ingresa tu solicitud</h2>
+
+    <form action="{{ route('solicitudes.store') }}" method="POST" class="solicitud-form">
+      @csrf
+
+      {{-- 1. Datos personales --}}
+      <fieldset class="mb-6">
+        <legend>1. Datos personales</legend>
+
+        <div class="two-columns gap mb-4">
+          <div class="field">
+            <label for="nombre_completo">Nombre Completo *</label>
+            <input type="text" name="nombre_completo" id="nombre_completo"
+                   class="form-control" value="{{ old('nombre_completo') }}">
+            @error('nombre_completo')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
           </div>
-        @endif
-
-        {{-- Éxito --}}
-        @if (session('success'))
-          <div class="alert alert-success">
-            {{ session('success') }}
+          <div class="field">
+            <label for="identificacion">Identificación *</label>
+            <input type="text" name="identificacion" id="identificacion"
+                   class="form-control" value="{{ old('identificacion') }}">
+            @error('identificacion')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
           </div>
-        @endif
+        </div>
 
-        {{-- FORMULARIO --}}
-        <form
-          id="solicitudForm"
-          action="{{ route('solicitudes.store') }}"
-          method="POST"
-          novalidate
-          onsubmit="document.getElementById('monto_solicitado').value =
-                       document.getElementById('monto_solicitado').value.replace(/\D/g,'');"
-        >
-          @csrf
-
-          <h5 class="mt-3">1. Datos Personales</h5>
-          <div class="row g-3">
-            {{-- Nombre Completo --}}
-            <div class="col-md-6">
-              <label for="nombre_completo" class="form-label">Nombre Completo *</label>
-              <input 
-                type="text"
-                id="nombre_completo"
-                name="nombre_completo"
-                class="form-control @error('nombre_completo') is-invalid @enderror"
-                value="{{ old('nombre_completo') }}"
-                required
-              >
-              @error('nombre_completo')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-
-            {{-- Identificación --}}
-            <div class="col-md-6">
-              <label for="identificacion" class="form-label">Identificación *</label>
-              <input 
-                type="text"
-                id="identificacion"
-                name="identificacion"
-                class="form-control @error('identificacion') is-invalid @enderror"
-                value="{{ old('identificacion') }}"
-                inputmode="numeric"
-                pattern="\d*"
-                required
-              >
-              @error('identificacion')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-
-            {{-- Fecha de Nacimiento --}}
-            <div class="col-md-6">
-              <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento *</label>
-              <input 
-                type="date"
-                id="fecha_nacimiento"
-                name="fecha_nacimiento"
-                class="form-control @error('fecha_nacimiento') is-invalid @enderror"
-                value="{{ old('fecha_nacimiento') }}"
-                required
-              >
-              @error('fecha_nacimiento')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-
-            {{-- Correo Electrónico --}}
-            <div class="col-md-6">
-              <label for="email" class="form-label">Correo Electrónico *</label>
-              <input 
-                type="email"
-                id="email"
-                name="email"
-                class="form-control @error('email') is-invalid @enderror"
-                value="{{ old('email') }}"
-                required
-              >
-              @error('email')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-
-            {{-- Teléfono --}}
-            <div class="col-md-6">
-              <label for="telefono" class="form-label">Teléfono *</label>
-              <input 
-                type="text"
-                id="telefono"
-                name="telefono"
-                class="form-control @error('telefono') is-invalid @enderror"
-                value="{{ old('telefono') }}"
-                inputmode="numeric"
-                pattern="\d*"
-                required
-              >
-              @error('telefono')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-
-            {{-- Dirección --}}
-            <div class="col-md-6">
-              <label for="direccion" class="form-label">Dirección *</label>
-              <input 
-                type="text"
-                id="direccion"
-                name="direccion"
-                class="form-control @error('direccion') is-invalid @enderror"
-                value="{{ old('direccion') }}"
-                required
-              >
-              @error('direccion')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
+        <div class="two-columns gap mb-4">
+          <div class="field">
+            <label for="fecha_nacimiento">Fecha de Nacimiento *</label>
+            <input type="date" name="fecha_nacimiento" id="fecha_nacimiento"
+                   class="form-control" value="{{ old('fecha_nacimiento') }}">
+            @error('fecha_nacimiento')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
           </div>
+          <div class="field">
+            <label for="email">Correo Electrónico *</label>
+            <input type="email" name="email" id="email"
+                   class="form-control" value="{{ old('email') }}">
+            @error('email')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
+          </div>
+        </div>
 
-          <hr class="my-4">
+        <div class="two-columns gap mb-4">
+          <div class="field">
+            <label for="telefono">Teléfono *</label>
+            <input type="text" name="telefono" id="telefono"
+                   class="form-control" value="{{ old('telefono') }}">
+            @error('telefono')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
+          </div>
+          <div class="field">
+            <label for="direccion">Dirección *</label>
+            <input type="text" name="direccion" id="direccion"
+                   class="form-control" value="{{ old('direccion') }}">
+            @error('direccion')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
+          </div>
+        </div>
 
-          <h5>2. Datos del Préstamo</h5>
-          <div class="row g-3"> {{-- sin align-items-end --}}
-            {{-- Monto Solicitado --}}
-            <div class="col-md-6">
-              <label for="monto_solicitado" class="form-label">Monto Solicitado *</label>
-              <div class="input-group">
-                <span class="input-group-text">$</span>
-                <input 
-                  type="text"
-                  id="monto_solicitado"
-                  name="monto_solicitado"
-                  class="form-control @error('monto_solicitado') is-invalid @enderror"
-                  value="{{ old('monto_solicitado') }}"
-                  inputmode="numeric"
-                  pattern="\d*"
-                  required
-                >
-                <span class="input-group-text">COP</span>
-              </div>
-              @error('monto_solicitado')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-              @enderror
+        <div class="two-columns gap">
+          <div class="field">
+            <label for="empresa">Empresa</label>
+            <input type="text" name="empresa" id="empresa"
+                   class="form-control" value="{{ old('empresa') }}">
+            @error('empresa')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
+          </div>
+          <div></div>
+        </div>
+      </fieldset>
+
+      {{-- 2. Datos del préstamo --}}
+      <fieldset class="mb-6">
+        <legend>2. Datos del préstamo</legend>
+
+        <div class="two-columns gap mb-4">
+          <div class="field">
+            <label for="monto_solicitado">Monto Solicitado *</label>
+            <div class="input-group">
+              <input type="number" name="monto_solicitado" id="monto_solicitado"
+                     class="form-control" value="{{ old('monto_solicitado') }}">
+              <span class="input-group-text">COP</span>
             </div>
-
-            {{-- Plazo Sugerido --}}
-            <div class="col-md-6">
-              <label for="plazo_meses" class="form-label">Plazo Sugerido (meses)</label>
-              <input 
-                type="number"
-                id="plazo_meses"
-                name="plazo_meses"
-                class="form-control @error('plazo_meses') is-invalid @enderror"
-                value="{{ old('plazo_meses', 12) }}"
-                min="1"
-                required
-              >
-              @error('plazo_meses')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
+            @error('monto_solicitado')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
           </div>
-
-          <div class="alert alert-info mt-4">
-            <strong>Tasa de interés fija:</strong> 2.2%
-            <input type="hidden" name="tasa_interes" value="2.2">
+          <div class="field">
+            <label for="plazo_meses">Plazo (meses) *</label>
+            <input type="number" name="plazo_meses" id="plazo_meses"
+                   class="form-control" value="{{ old('plazo_meses',12) }}" min="1">
+            @error('plazo_meses')
+              <span class="text-red-600 text-sm">{{ $message }}</span>
+            @enderror
           </div>
+        </div>
+      </fieldset>
 
-          <div class="text-end mt-4">
-            <button type="submit" class="btn btn-success px-4">
-              Enviar Solicitud
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      {{-- Botón enviar --}}
+      <button type="submit" class="btn-next">
+        Enviar solicitud ➔
+      </button>
+    </form>
   </div>
+</div>
 @endsection
-
-@push('scripts')
-<script>
-  document.addEventListener('DOMContentLoaded', function(){
-    const input = document.getElementById('monto_solicitado');
-
-    // Sólo formatea mientras escribes
-    input.addEventListener('input', e => {
-      let v = e.target.value.replace(/\D/g, '');
-      e.target.value = v ? new Intl.NumberFormat('es-CO').format(v) : '';
-    });
-  });
-</script>
-@endpush

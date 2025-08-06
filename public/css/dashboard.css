@@ -1,17 +1,23 @@
 /* public/css/dashboard.css */
+
+/* ###########################
+   Dashboard Layout
+   ########################### */
+
+/* Rejilla principal: sidebar + contenido */
 .dashboard-wrapper {
-  display: flex;
+  display: grid;
+  grid-template-columns: 60px 1fr;      /* sidebar col fija + contenido flexible */
+  transition: grid-template-columns .2s;
   min-height: 100vh;
+}
+.dashboard-wrapper:hover {
+  grid-template-columns: 200px 1fr;     /* expande la sidebar en hover */
 }
 
 /* Sidebar */
 .sidebar {
-  width: 60px;
   background: #00457C;
-  transition: width .2s;
-}
-.sidebar:hover {
-  width: 200px;
 }
 .sidebar nav a {
   display: flex;
@@ -22,7 +28,6 @@
 }
 .sidebar nav a span {
   margin-left: .5rem;
-  white-space: nowrap;
   opacity: 0;
   transition: opacity .2s;
 }
@@ -30,12 +35,14 @@
   opacity: 1;
 }
 
-/* Main content */
+/* Contenido principal */
 .main-content {
-  flex: 1;
+  overflow: auto;
   background: #f5f7fa;
   padding: 2rem;
 }
+
+/* Header del dashboard */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -51,10 +58,13 @@
   color: #666;
 }
 
-/* Stats */
+/* ###########################
+   Estadísticas (stat-cards)
+   ########################### */
+
 .stats-overview {
   display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
 }
 .stat-card {
@@ -77,3 +87,153 @@
 .stat-card.pendientes { border-top: 4px solid #FFC600; }
 .stat-card.aprobadas  { border-top: 4px solid #22C55E; }
 .stat-card.rechazadas { border-top: 4px solid #EF4444; }
+
+/* ###########################
+   Formularios Dashboard
+   ########################### */
+
+/* Contenedor del formulario */
+.main-content form {
+  background: #fff;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  border-radius: .5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+@media (min-width: 768px) {
+  .main-content form {
+    padding: 2rem;
+  }
+}
+
+/* Fieldset y legend */
+.main-content fieldset {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: .375rem;
+}
+.main-content legend {
+  padding: 0 .5rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #00457C;
+}
+
+/* Estilos de etiquetas y controles */
+.main-content .form-label {
+  display: block;
+  margin-bottom: .5rem;
+  font-weight: 500;
+  color: #334155;
+}
+.main-content .form-control {
+  width: 100%;
+  padding: .5rem .75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: .375rem;
+  box-sizing: border-box;
+}
+.main-content .input-group-text {
+  padding: .5rem .75rem;
+  background: #f5f7fa;
+  border: 1px solid #cbd5e1;
+  border-radius: .375rem;
+}
+
+/* Grid de campos (alineación simétrica) */
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.gap {
+  gap: 1.5rem;
+}
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+.mb-6 {
+  margin-bottom: 2rem;
+}
+
+/* Cada campo en dos columnas: label + input */
+.main-content .field {
+  display: flex;
+  flex-direction: column;
+}
+@media (max-width: 768px) {
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Botón de envío */
+.btn-next,
+.main-content .btn-primary {
+  display: inline-block;
+  background: #00457C;
+  color: #fff;
+  border: none;
+  padding: .75rem 1.5rem;
+  border-radius: .375rem;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+}
+.btn-next:hover,
+.main-content .btn-primary:hover {
+  background: #00355a;
+}
+
+/* ###########################
+   Solicitudes Card (índice)
+   ########################### */
+
+.solicitud-card-wrapper {
+  background: #f5f7fa;
+  padding: 2rem 1rem;
+}
+.solicitud-card {
+  background: #fff;
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem;
+  border-radius: .5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.solicitud-title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #00457c;
+  text-align: center;
+}
+
+/* Tabla responsiva */
+.table-responsive {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th,
+.table td {
+  padding: .75rem;
+  text-align: left;
+  border-top: 1px solid #e2e8f0;
+}
+.table thead th {
+  background: #f1f5f9;
+}
+.badge {
+  display: inline-block;
+  padding: .25em .5em;
+  border-radius: .375rem;
+  font-size: .875rem;
+  color: #fff;
+}
+.bg-warning { background-color: #f59e0b; }
+.bg-success { background-color: #22c55e; }
+.bg-danger  { background-color: #ef4444; }

@@ -9,18 +9,40 @@
 
 @section('content')
 <div class="dashboard-wrapper">
-  <!-- Sidebar -->
+  {{-- Sidebar --}}
   <aside class="sidebar">
     <nav>
       <a href="{{ route('dashboard') }}" class="active">
         🏠 <span>Inicio</span>
       </a>
-      <a href="{{ route('solicitudes.create') }}">
-        📄 <span>Solicitudes</span>
-      </a>
-      <a href="#">
-        📊 <span>Informes</span>
-      </a>
+
+      {{-- Menú para usuarios “user” --}}
+      @role('user')
+        <a href="{{ route('solicitudes.create') }}">
+          📄 <span>Solicitar Préstamo</span>
+        </a>
+        <a href="{{ route('solicitudes.index') }}">
+          📑 <span>Mis Préstamos</span>
+        </a>
+      @endrole
+
+      {{-- Menú para admin y super-admin --}}
+      @hasanyrole('admin|super-admin')
+        <a href="{{ route('solicitudes.index') }}">
+          📄 <span>Solicitudes</span>
+        </a>
+        <a href="{{ route('informes') }}">
+          📊 <span>Informes</span>
+        </a>
+      @endhasanyrole
+
+      {{-- Menú exclusivo para super-admin --}}
+      @role('super-admin')
+        <a href="{{ route('admin.users') }}">
+          👥 <span>Usuarios</span>
+        </a>
+      @endrole
+
       <a href="{{ route('profile.edit') }}">
         👤 <span>Perfil</span>
       </a>
@@ -34,48 +56,78 @@
     </nav>
   </aside>
 
-  <!-- Main content -->
+  {{-- Contenido principal --}}
   <div class="main-content">
     <header class="dashboard-header">
       <div>
-        <h1>Hola, {{ $user->name }}</h1>
-        <small>{{ \Carbon\Carbon::now()->locale('es')->translatedFormat('l, d \d\e F \d\e Y, H:i') }}</small>
+        <h1>Hola, {{ auth()->user()->name }}</h1>
+        <small>
+          {{ \Carbon\Carbon::now()
+               ->locale('es')
+               ->translatedFormat('l, d \d\e F \d\e Y, H:i') }}
+        </small>
       </div>
     </header>
 
+    {{-- Estadísticas --}}
     <section class="stats-overview">
-      <div class="stat-card total">
-        <h3>Total</h3>
-        <p>{{ $total }}</p>
-      </div>
-      <div class="stat-card pendientes">
-        <h3>Pendientes</h3>
-        <p>{{ $pendientes }}</p>
-      </div>
-      <div class="stat-card aprobadas">
-        <h3>Aprobadas</h3>
-        <p>{{ $aprobadas }}</p>
-      </div>
-      <div class="stat-card rechazadas">
-        <h3>Rechazadas</h3>
-        <p>{{ $rechazadas }}</p>
-      </div>
+      {{-- Para usuarios “user”: sus propios préstamos --}}
+      @role('user')
+        <div class="stat-card total">
+          <h3>Total solicitados</h3>
+          <p>{{ $totalUsuario }}</p>
+        </div>
+        <div class="stat-card pendientes">
+          <h3>Pendientes</h3>
+          <p>{{ $pendientesUsuario }}</p>
+        </div>
+        <div class="stat-card aprobadas">
+          <h3>Aprobadas</h3>
+          <p>{{ $aprobadasUsuario }}</p>
+        </div>
+        <div class="stat-card rechazadas">
+          <h3>Rechazadas</h3>
+          <p>{{ $rechazadasUsuario }}</p>
+        </div>
+      @endrole
+
+      {{-- Para admin y super-admin: todos los préstamos --}}
+      @hasanyrole('admin|super-admin')
+        <div class="stat-card total">
+          <h3>Total solicitudes</h3>
+          <p>{{ $total }}</p>
+        </div>
+        <div class="stat-card pendientes">
+          <h3>Pendientes</h3>
+          <p>{{ $pendientes }}</p>
+        </div>
+        <div class="stat-card aprobadas">
+          <h3>Aprobadas</h3>
+          <p>{{ $aprobadas }}</p>
+        </div>
+        <div class="stat-card rechazadas">
+          <h3>Rechazadas</h3>
+          <p>{{ $rechazadas }}</p>
+        </div>
+      @endhasanyrole
     </section>
 
-    <!-- Banner Carrusel SOLO IMÁGENES dentro de un contenedor destacado -->
+    {{-- Banner con Splide --}}
     <div class="d-flex justify-content-center mt-5">
-      <div class="bg-white rounded-4 shadow-lg p-3" style="width:100%;">
-        <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
-          <div class="carousel-inner">
-            <div class="carousel-item active">
-              <img src="{{ asset('img/banner1.jpg') }}" class="d-block w-100" alt="Banner 1">
-            </div>
-            <div class="carousel-item">
-              <img src="{{ asset('img/banner2.jpg') }}" class="d-block w-100" alt="Banner 2">
-            </div>
-            <div class="carousel-item">
-              <img src="{{ asset('img/banner3.jpg') }}" class="d-block w-100" alt="Banner 3">
-            </div>
+      <div class="w-full max-w-7xl">
+        <div id="bannerSplide" class="splide">
+          <div class="splide__track">
+            <ul class="splide__list">
+              <li class="splide__slide">
+                <img src="{{ asset('img/banner1.jpg') }}" alt="Banner 1" class="w-full rounded-md shadow-lg">
+              </li>
+              <li class="splide__slide">
+                <img src="{{ asset('img/banner2.jpg') }}" alt="Banner 2" class="w-full rounded-md shadow-lg">
+              </li>
+              <li class="splide__slide">
+                <img src="{{ asset('img/banner3.jpg') }}" alt="Banner 3" class="w-full rounded-md shadow-lg">
+              </li>
+            </ul>
           </div>
         </div>
       </div>

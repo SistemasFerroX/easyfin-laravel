@@ -14,6 +14,12 @@
   <!-- CSS + JS compilados por Vite (Tailwind + Bootstrap) -->
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+  <!-- Splide CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.3/dist/css/splide.min.css"
+  />
+
   <!-- Estilos extra sólo para dashboard -->
   @stack('styles')
 </head>
@@ -35,6 +41,21 @@
       @yield('content')
     </main>
   </div>
+
+  <!-- Splide JS y script de inicialización -->
+  <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.3/dist/js/splide.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      new Splide('#bannerSplide', {
+        type      : 'loop',
+        perPage   : 1,
+        autoplay  : true,
+        interval  : 4000,
+        pagination: false,
+        arrows    : false,
+      }).mount();
+    });
+  </script>
 
   <!-- Scripts adicionales -->
   @stack('scripts')

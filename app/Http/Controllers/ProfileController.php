@@ -11,8 +11,14 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function __construct()
+    {
+        // Solo usuarios autenticados pueden acceder
+        $this->middleware('auth');
+    }
+
     /**
-     * Display the user's profile form.
+     * Mostrar el formulario de edición de perfil del usuario.
      */
     public function edit(Request $request): View
     {
@@ -22,23 +28,31 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile information.
+     * Actualizar la información del perfil del usuario.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $data = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Llenar y guardar datos actualizados
+        $user->fill($data);
+
+        // Si cambia el email, resetear verificación y reenviar link
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+            $user->save();
+            $user->sendEmailVerificationNotification();
+        } else {
+            $user->save();
         }
 
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::route('profile.edit')
+            ->with('success', 'Perfil actualizado correctamente.');
     }
 
     /**
-     * Delete the user's account.
+     * Eliminar la cuenta del usuario.
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -47,7 +61,6 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-
         Auth::logout();
 
         $user->delete();
@@ -55,6 +68,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        return Redirect::to('/')->with('success', 'Cuenta eliminada correctamente.');
     }
 }

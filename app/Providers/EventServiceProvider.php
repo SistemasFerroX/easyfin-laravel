@@ -27,7 +27,12 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        parent::boot();
+
+        // Al registrar un usuario, asigna el rol "User"
+        Event::listen(Registered::class, function (Registered $event) {
+            $event->user->assignRole('User');
+        });
     }
 
     /**
