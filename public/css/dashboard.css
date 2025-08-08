@@ -1,99 +1,122 @@
-/* public/css/dashboard.css */
+/* ===========================
+   Variables
+   =========================== */
+:root{
+  --sb: 60px;        /* ancho sidebar colapsada */
+  --sb-open: 200px;  /* ancho sidebar expandida */
+  --nav-h: 64px;     /* altura del navbar (h-16 = 64px) */
+}
 
-/* ###########################
-   Dashboard Layout
-   ########################### */
-
-/* Rejilla principal: sidebar + contenido */
-.dashboard-wrapper {
-  display: grid;
-  grid-template-columns: 60px 1fr;      /* sidebar col fija + contenido flexible */
-  transition: grid-template-columns .2s;
+/* ===========================
+   Layout: overlay sidebar
+   =========================== */
+.dashboard-wrapper{
+  position: relative;
   min-height: 100vh;
 }
-.dashboard-wrapper:hover {
-  grid-template-columns: 200px 1fr;     /* expande la sidebar en hover */
+
+/* Sidebar fijo desde el tope (no deja hueco arriba) */
+.sidebar{
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--sb);
+  background: #00457C;
+  overflow: hidden;
+  transition: width .18s ease;
+  z-index: 1100; /* por debajo del navbar */
+}
+.sidebar:hover{ width: var(--sb-open); }
+
+/* 👇 Empuja los ítems del sidebar por debajo del navbar */
+.sidebar nav{
+  padding-top: var(--nav-h);
 }
 
-/* Sidebar */
-.sidebar {
-  background: #00457C;
-}
-.sidebar nav a {
+.sidebar nav a{
   display: flex;
   align-items: center;
   padding: 1rem;
   color: #fff;
   text-decoration: none;
 }
-.sidebar nav a span {
+.sidebar nav a span{
   margin-left: .5rem;
   opacity: 0;
-  transition: opacity .2s;
+  transition: opacity .18s ease;
 }
-.sidebar:hover nav a span {
-  opacity: 1;
-}
+.sidebar:hover nav a span{ opacity: 1; }
 
-/* Contenido principal */
-.main-content {
-  overflow: auto;
+/* Contenido: reserva solo el ancho colapsado */
+.main-content{
+  margin-left: var(--sb);
   background: #f5f7fa;
   padding: 2rem;
+  min-height: 100vh;
+  overflow: auto;
 }
 
-/* Header del dashboard */
-.dashboard-header {
+/* ===========================
+   Navbar superior
+   =========================== */
+.app-topbar{
+  position: sticky;
+  top: 0;
+  z-index: 1200;         /* por encima de la sidebar */
+  padding-left: var(--sb); /* deja espacio para el logo y que no lo tape la barra */
+  background: #fff;
+}
+
+/* ===========================
+   Header del dashboard
+   =========================== */
+.dashboard-header{
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 2rem;
 }
-.dashboard-header h1 {
+.dashboard-header h1{
   margin: 0;
   font-size: 1.75rem;
   color: #00457C;
 }
-.dashboard-header small {
-  color: #666;
-}
+.dashboard-header small{ color: #666; }
 
-/* ###########################
-   Estadísticas (stat-cards)
-   ########################### */
-
-.stats-overview {
+/* ===========================
+   Stats
+   =========================== */
+.stats-overview{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
 }
-.stat-card {
+.stat-card{
   background: #fff;
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   text-align: center;
 }
-.stat-card h3 {
+.stat-card h3{
   margin: 0 0 .5rem;
   font-size: 1rem;
   color: #333;
 }
-.stat-card p {
+.stat-card p{
   margin: 0;
   font-size: 1.5rem;
   color: #00457C;
 }
-.stat-card.pendientes { border-top: 4px solid #FFC600; }
-.stat-card.aprobadas  { border-top: 4px solid #22C55E; }
-.stat-card.rechazadas { border-top: 4px solid #EF4444; }
+.stat-card.pendientes{ border-top: 4px solid #FFC600; }
+.stat-card.aprobadas { border-top: 4px solid #22C55E; }
+.stat-card.rechazadas{ border-top: 4px solid #EF4444; }
 
-/* ###########################
-   Formularios Dashboard
-   ########################### */
-
-/* Contenedor del formulario */
-.main-content form {
+/* ===========================
+   Formularios
+   =========================== */
+.main-content form{
   background: #fff;
   max-width: 40rem;
   margin: 0 auto;
@@ -101,76 +124,53 @@
   border-radius: .5rem;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
-@media (min-width: 768px) {
-  .main-content form {
-    padding: 2rem;
-  }
+@media (min-width: 768px){
+  .main-content form{ padding: 2rem; }
 }
-
-/* Fieldset y legend */
-.main-content fieldset {
+.main-content fieldset{
   margin-bottom: 1.5rem;
   padding: 1rem;
   border: 1px solid #e2e8f0;
   border-radius: .375rem;
 }
-.main-content legend {
+.main-content legend{
   padding: 0 .5rem;
   font-size: 1.125rem;
   font-weight: 500;
   color: #00457C;
 }
-
-/* Estilos de etiquetas y controles */
-.main-content .form-label {
+.main-content .form-label{
   display: block;
   margin-bottom: .5rem;
   font-weight: 500;
   color: #334155;
 }
-.main-content .form-control {
+.main-content .form-control{
   width: 100%;
   padding: .5rem .75rem;
   border: 1px solid #cbd5e1;
   border-radius: .375rem;
   box-sizing: border-box;
 }
-.main-content .input-group-text {
+.main-content .input-group-text{
   padding: .5rem .75rem;
   background: #f5f7fa;
   border: 1px solid #cbd5e1;
   border-radius: .375rem;
 }
 
-/* Grid de campos (alineación simétrica) */
-.two-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-.gap {
-  gap: 1.5rem;
-}
-.mb-4 {
-  margin-bottom: 1.5rem;
-}
-.mb-6 {
-  margin-bottom: 2rem;
+.two-columns{ display: grid; grid-template-columns: 1fr 1fr; }
+.gap{ gap: 1.5rem; }
+.mb-4{ margin-bottom: 1.5rem; }
+.mb-6{ margin-bottom: 2rem; }
+.main-content .field{ display: flex; flex-direction: column; }
+
+@media (max-width: 768px){
+  .two-columns{ grid-template-columns: 1fr; }
 }
 
-/* Cada campo en dos columnas: label + input */
-.main-content .field {
-  display: flex;
-  flex-direction: column;
-}
-@media (max-width: 768px) {
-  .two-columns {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Botón de envío */
 .btn-next,
-.main-content .btn-primary {
+.main-content .btn-primary{
   display: inline-block;
   background: #00457C;
   color: #fff;
@@ -182,19 +182,13 @@
   text-align: center;
 }
 .btn-next:hover,
-.main-content .btn-primary:hover {
-  background: #00355a;
-}
+.main-content .btn-primary:hover{ background: #00355a; }
 
-/* ###########################
-   Solicitudes Card (índice)
-   ########################### */
-
-.solicitud-card-wrapper {
-  background: #f5f7fa;
-  padding: 2rem 1rem;
-}
-.solicitud-card {
+/* ===========================
+   Listado de solicitudes
+   =========================== */
+.solicitud-card-wrapper{ background: #f5f7fa; padding: 2rem 1rem; }
+.solicitud-card{
   background: #fff;
   max-width: 48rem;
   margin: 0 auto;
@@ -202,38 +196,32 @@
   border-radius: .5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-.solicitud-title {
+.solicitud-title{
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
   color: #00457c;
   text-align: center;
 }
-
-/* Tabla responsiva */
-.table-responsive {
-  overflow-x: auto;
-  margin-top: 1rem;
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table th,
-.table td {
+.table-responsive{ overflow-x: auto; margin-top: 1rem; }
+.table{ width: 100%; border-collapse: collapse; }
+.table th, .table td{
   padding: .75rem;
   text-align: left;
   border-top: 1px solid #e2e8f0;
 }
-.table thead th {
-  background: #f1f5f9;
+.table thead th{ background: #f1f5f9; }
+.badge{ display: inline-block; padding: .25em .5em; border-radius: .375rem; font-size: .875rem; color:#fff; }
+.bg-warning{ background-color:#f59e0b; }
+.bg-success{ background-color:#22c55e; }
+.bg-danger { background-color:#ef4444; }
+
+/* ===========================
+   Splide (banner)
+   =========================== */
+#bannerSplide .splide__track{ overflow: hidden; }
+#bannerSplide img{
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
-.badge {
-  display: inline-block;
-  padding: .25em .5em;
-  border-radius: .375rem;
-  font-size: .875rem;
-  color: #fff;
-}
-.bg-warning { background-color: #f59e0b; }
-.bg-success { background-color: #22c55e; }
-.bg-danger  { background-color: #ef4444; }
