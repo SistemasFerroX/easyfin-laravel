@@ -19,17 +19,27 @@ class Solicitud extends Model
         'direccion',
         'telefono',
         'email',
-        'empresa',         // ← aquí
+        'empresa',
         'monto_solicitado',
         'plazo_meses',
         'tasa_interes',
         'status',
+        'observaciones',
     ];
 
+    protected $casts = [
+        'monto_solicitado' => 'integer',
+        'plazo_meses'      => 'integer',
+        'tasa_interes'     => 'float',
+        'fecha_nacimiento' => 'date',
+        'created_at'       => 'datetime',
+    ];
 
-    /**
-     * Relación a User: cada solicitud pertenece a un usuario.
-     */
+    // Si no mandan status desde el back, queda pendiente
+    protected $attributes = [
+        'status' => 'pendiente',
+    ];
+
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class);

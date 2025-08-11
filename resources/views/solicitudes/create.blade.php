@@ -2,123 +2,159 @@
 @extends('layouts.app')
 
 @push('styles')
-  <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/solicitud.css') }}">
 @endpush
 
-@section('content')
-<div class="solicitud-card-wrapper">
-  <div class="solicitud-card">
-    <h2 class="solicitud-title">Ingresa tu solicitud</h2>
+@section('title', 'EasyFin – Nueva Solicitud')
 
-    <form action="{{ route('solicitudes.store') }}" method="POST" class="solicitud-form">
+@section('content')
+<div class="solicitud-wrapper">
+  <div class="form-card">
+    <header class="form-head">
+      <div class="head-left">
+        <div class="pill">Formulario</div>
+        <h1>Ingresa tu solicitud</h1>
+        <p class="muted">Completa tus datos y el monto a solicitar. ¡Es rápido y claro!</p>
+      </div>
+      <a href="{{ route('solicitudes.index') }}" class="btn-ghost">← Volver</a>
+    </header>
+
+    @if ($errors->any())
+      <div class="alert error"><strong>Revisa el formulario:</strong> hay campos por corregir.</div>
+    @endif
+    @if (session('status'))
+      <div class="alert success">{{ session('status') }}</div>
+    @endif
+
+    <form method="POST" action="{{ route('solicitudes.store') }}" id="solicitudForm" novalidate>
       @csrf
 
       {{-- 1. Datos personales --}}
-      <fieldset class="mb-6">
-        <legend>1. Datos personales</legend>
+      <section class="section">
+        <div class="section-head">
+          <div class="section-icon" aria-hidden="true">👤</div>
+          <h2>1. Datos personales</h2>
+        </div>
 
-        <div class="two-columns gap mb-4">
+        <div class="grid-2">
           <div class="field">
             <label for="nombre_completo">Nombre Completo *</label>
-            <input type="text" name="nombre_completo" id="nombre_completo"
-                   class="form-control" value="{{ old('nombre_completo') }}">
-            @error('nombre_completo')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            <input id="nombre_completo" name="nombre_completo" type="text" value="{{ old('nombre_completo') }}" required>
+            @error('nombre_completo') <small class="error">{{ $message }}</small> @enderror
           </div>
+
           <div class="field">
             <label for="identificacion">Identificación *</label>
-            <input type="text" name="identificacion" id="identificacion"
-                   class="form-control" value="{{ old('identificacion') }}">
-            @error('identificacion')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            <input id="identificacion" name="identificacion" type="text" value="{{ old('identificacion') }}" required>
+            @error('identificacion') <small class="error">{{ $message }}</small> @enderror
           </div>
-        </div>
 
-        <div class="two-columns gap mb-4">
           <div class="field">
             <label for="fecha_nacimiento">Fecha de Nacimiento *</label>
-            <input type="date" name="fecha_nacimiento" id="fecha_nacimiento"
-                   class="form-control" value="{{ old('fecha_nacimiento') }}">
-            @error('fecha_nacimiento')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            <input id="fecha_nacimiento" name="fecha_nacimiento" type="date" value="{{ old('fecha_nacimiento') }}" required>
+            @error('fecha_nacimiento') <small class="error">{{ $message }}</small> @enderror
           </div>
+
           <div class="field">
             <label for="email">Correo Electrónico *</label>
-            <input type="email" name="email" id="email"
-                   class="form-control" value="{{ old('email') }}">
-            @error('email')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            <input id="email" name="email" type="email" value="{{ old('email') }}" required>
+            @error('email') <small class="error">{{ $message }}</small> @enderror
           </div>
-        </div>
 
-        <div class="two-columns gap mb-4">
           <div class="field">
             <label for="telefono">Teléfono *</label>
-            <input type="text" name="telefono" id="telefono"
-                   class="form-control" value="{{ old('telefono') }}">
-            @error('telefono')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            <input id="telefono" name="telefono" type="text" value="{{ old('telefono') }}" required>
+            @error('telefono') <small class="error">{{ $message }}</small> @enderror
           </div>
+
           <div class="field">
             <label for="direccion">Dirección *</label>
-            <input type="text" name="direccion" id="direccion"
-                   class="form-control" value="{{ old('direccion') }}">
-            @error('direccion')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            <input id="direccion" name="direccion" type="text" value="{{ old('direccion') }}" required>
+            @error('direccion') <small class="error">{{ $message }}</small> @enderror
           </div>
-        </div>
 
-        <div class="two-columns gap">
           <div class="field">
             <label for="empresa">Empresa</label>
-            <input type="text" name="empresa" id="empresa"
-                   class="form-control" value="{{ old('empresa') }}">
-            @error('empresa')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            <input id="empresa" name="empresa" type="text" value="{{ old('empresa') }}">
+            @error('empresa') <small class="error">{{ $message }}</small> @enderror
           </div>
-          <div></div>
         </div>
-      </fieldset>
+      </section>
 
       {{-- 2. Datos del préstamo --}}
-      <fieldset class="mb-6">
-        <legend>2. Datos del préstamo</legend>
+      <section class="section">
+        <div class="section-head">
+          <div class="section-icon" aria-hidden="true">💳</div>
+          <h2>2. Datos del préstamo</h2>
+        </div>
 
-        <div class="two-columns gap mb-4">
+        <div class="grid-2">
           <div class="field">
-            <label for="monto_solicitado">Monto Solicitado *</label>
+            <label for="monto_solicitado_ui">Monto Solicitado *</label>
             <div class="input-group">
-              <input type="number" name="monto_solicitado" id="monto_solicitado"
-                     class="form-control" value="{{ old('monto_solicitado') }}">
-              <span class="input-group-text">COP</span>
+              <input id="monto_solicitado_ui" type="text" inputmode="numeric" autocomplete="off"
+                     value="{{ old('monto_solicitado') ? number_format(old('monto_solicitado'), 0, ',', '.') : '' }}"
+                     placeholder="0" data-money required>
+              <span class="suffix">COP</span>
             </div>
-            @error('monto_solicitado')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            {{-- el valor que se envía al back (sin puntos) --}}
+            <input type="hidden" name="monto_solicitado" id="monto_solicitado">
+            @error('monto_solicitado') <small class="error">{{ $message }}</small> @enderror
+            <small class="help">Ej: 20.000.000</small>
           </div>
+
           <div class="field">
             <label for="plazo_meses">Plazo (meses) *</label>
-            <input type="number" name="plazo_meses" id="plazo_meses"
-                   class="form-control" value="{{ old('plazo_meses',12) }}" min="1">
-            @error('plazo_meses')
-              <span class="text-red-600 text-sm">{{ $message }}</span>
-            @enderror
+            <div class="input-group">
+              <select id="plazo_meses" name="plazo_meses" required>
+                @foreach([6,9,12,18,24,36,48,60] as $m)
+                  <option value="{{ $m }}" {{ old('plazo_meses', 12)==$m ? 'selected' : '' }}>{{ $m }}</option>
+                @endforeach
+              </select>
+              <span class="suffix">meses</span>
+            </div>
+            @error('plazo_meses') <small class="error">{{ $message }}</small> @enderror
+          </div>
+
+          <div class="field span-2">
+            <label for="observaciones">Observaciones</label>
+            <textarea id="observaciones" name="observaciones" rows="3" placeholder="Información adicional que quieras compartir...">{{ old('observaciones') }}</textarea>
+            @error('observaciones') <small class="error">{{ $message }}</small> @enderror
           </div>
         </div>
-      </fieldset>
+      </section>
 
-      {{-- Botón enviar --}}
-      <button type="submit" class="btn-next">
-        Enviar solicitud ➔
-      </button>
+      <footer class="form-actions">
+        <a href="{{ route('solicitudes.index') }}" class="btn-ghost">Cancelar</a>
+        <button type="submit" class="btn-primary">Enviar solicitud</button>
+      </footer>
     </form>
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+  // Formato de moneda (es-CO) en UI; el hidden envía sólo dígitos
+  (function(){
+    const ui = document.getElementById('monto_solicitado_ui');
+    const hidden = document.getElementById('monto_solicitado');
+    const form = document.getElementById('solicitudForm');
+    if(!ui || !hidden || !form) return;
+
+    const fmt = new Intl.NumberFormat('es-CO');
+    const onlyNums = s => (s||'').replace(/\D+/g,'');
+
+    if(ui.value.trim()){ ui.value = fmt.format(parseInt(onlyNums(ui.value))); }
+
+    ui.addEventListener('input', e => {
+      const raw = onlyNums(e.target.value);
+      ui.value = raw ? fmt.format(parseInt(raw,10)) : '';
+    });
+
+    form.addEventListener('submit', () => {
+      hidden.value = onlyNums(ui.value);
+    });
+  })();
+</script>
+@endpush

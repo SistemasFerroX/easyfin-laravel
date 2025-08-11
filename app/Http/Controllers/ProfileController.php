@@ -2,72 +2,81 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 class ProfileController extends Controller
 {
     public function __construct()
     {
-        // Solo usuarios autenticados pueden acceder
-        $this->middleware('auth');
+        $this->middleware(['auth']);
     }
 
-    /**
-     * Mostrar el formulario de edición de perfil del usuario.
-     */
-    public function edit(Request $request): View
+    public function edit(Request $request)
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user  = $request->user();
+        $roles = method_exists($user, 'getRoleNames') ? $user->getRoleNames() : collect();
+
+        return view('profile.edit', compact('user', 'roles'));
     }
 
-    /**
-     * Actualizar la información del perfil del usuario.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request)
     {
         $user = $request->user();
-        $data = $request->validated();
 
-        // Llenar y guardar datos actualizados
-        $user->fill($data);
+        // Reglas básicas
+        $rules = [
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+        ];
 
-        // Si cambia el email, resetear verificación y reenviar link
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-            $user->save();
-            $user->sendEmailVerificationNotification();
-        } else {
-            $user->save();
+        // Si quiere cambiar contraseña
+        if ($request->filled('password') || $request->filled('current_password') || $request->filled('password_confirmation')) {
+            $rules['current_password'] = ['required', 'current_password'];
+            $rules['password']         = ['required', 'confirmed', Password::defaults()];
         }
 
-        return Redirect::route('profile.edit')
-            ->with('success', 'Perfil actualizado correctamente.');
+        $data = $request->validate($rules);
+
+        $previousEmail = $user->email;
+
+        $user->name  = $data['name'];
+        $user->email = $data['email'];
+
+        if (array_key_exists('password', $data)) {
+            $user->password = Hash::make($data['password']);
+        }
+
+        // Si cambia el email y el usuario verifica correo, invalida verificación y reenvía notificación
+        $emailChanged = $previousEmail !== $data['email'];
+        if ($emailChanged && $user instanceof MustVerifyEmail) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        if ($emailChanged && $user instanceof MustVerifyEmail) {
+            $user->sendEmailVerificationNotification();
+        }
+
+        return back()->with('success', 'Perfil actualizado correctamente.');
     }
 
-    /**
-     * Eliminar la cuenta del usuario.
-     */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current-password'],
-        ]);
+        $request->validate(['password' => ['required', 'current_password']]);
 
         $user = $request->user();
-        Auth::logout();
 
+        auth()->logout();
         $user->delete();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/')->with('success', 'Cuenta eliminada correctamente.');
+        return redirect()->route('welcome');
     }
 }

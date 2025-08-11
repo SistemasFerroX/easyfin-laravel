@@ -29,7 +29,7 @@
       @endhasanyrole
 
       @role('super-admin')
-        <a href="{{ route('admin.users') }}">👥 <span>Usuarios</span></a>
+        <a href="{{ route('admin.users.index') }}">👥 <span>Usuarios</span></a>
       @endrole
 
       <a href="{{ route('profile.edit') }}">👤 <span>Perfil</span></a>

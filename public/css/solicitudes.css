@@ -1,0 +1,133 @@
+:root{
+  --bg:#f7f8fb;
+  --card:#ffffff;
+  --ink:#1f2937;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --brand:#25356C;            /* azul EasyFin (del contexto) */
+  --accent:#FF9200;           /* acento cálido */
+  --pending:#f59e0b;
+  --approved:#10b981;
+  --rejected:#ef4444;
+  --shadow:0 10px 20px rgba(0,0,0,.06);
+  --radius:18px;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink);}
+
+.solicitudes-wrapper{
+  max-width:1100px;
+  margin:24px auto;
+  padding:0 16px 48px;
+}
+
+.page-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  margin-bottom:18px;
+}
+.page-title{display:flex; align-items:center; gap:12px;}
+.page-title h1{margin:0; font-size:1.6rem; font-weight:800; letter-spacing:.2px;}
+.page-title .muted{margin:4px 0 0; color:var(--muted); font-size:.95rem}
+.brand-mark{height:28px; width:auto; filter:grayscale(.1) contrast(1.1)}
+
+.btn-primary{
+  display:inline-flex; align-items:center; gap:8px;
+  background:linear-gradient(135deg, var(--brand), #1b254f);
+  color:#fff; padding:10px 14px; border-radius:12px; text-decoration:none;
+  box-shadow:var(--shadow); font-weight:700; border:1px solid #1e2a57;
+}
+.btn-primary:hover{opacity:.95; transform:translateY(-1px); transition:.2s ease}
+.btn-ghost{
+  border:1px solid var(--line); background:#fff; color:var(--ink);
+  padding:10px 14px; border-radius:12px; font-weight:600;
+}
+.btn-link{color:var(--brand); text-decoration:none; font-weight:700}
+.btn-link:hover{text-decoration:underline}
+
+.stats{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:12px 0 18px;
+}
+.stat-card{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:14px 16px; box-shadow:var(--shadow);
+}
+.stat-card .stat-label{display:block; color:var(--muted); font-size:.85rem}
+.stat-card .stat-value{font-size:1.4rem; font-weight:800}
+.stat-card.is-pending .stat-value{color:var(--pending)}
+.stat-card.is-approved .stat-value{color:var(--approved)}
+.stat-card.is-rejected .stat-value{color:var(--rejected)}
+
+.filters{
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:10px; box-shadow:var(--shadow); margin-bottom:14px;
+}
+.filters .field{flex:1 1 220px}
+.filters input, .filters select{
+  width:100%; height:40px; border-radius:10px; border:1px solid var(--line);
+  padding:0 12px; background:#fff;
+}
+
+.empty-state{padding:18px 0 8px}
+.empty-card{
+  text-align:center; background:var(--card); border:1px solid var(--line);
+  border-radius:var(--radius); padding:36px 20px; box-shadow:var(--shadow)
+}
+.empty-illu{font-size:40px; margin-bottom:12px}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:14px;
+}
+@media (max-width:920px){ .cards{ grid-template-columns:1fr; } }
+
+.loan-card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  overflow:hidden; box-shadow:var(--shadow);
+}
+.loan-head{
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  padding:14px 16px; border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(37,53,108,.06), transparent);
+}
+.loan-id{display:flex; align-items:center; gap:12px}
+.loan-icon{width:38px; height:38px; border-radius:12px; background:#eef2ff;
+  display:grid; place-items:center; font-size:18px}
+.loan-title{margin:0; font-size:1.05rem; font-weight:800}
+.loan-date{color:var(--muted); font-size:.85rem}
+
+.badge{
+  text-transform:capitalize; padding:6px 10px; border-radius:999px;
+  font-weight:800; font-size:.8rem; border:1px solid transparent;
+}
+.badge--pending{color:#92400e; background:#fef3c7; border-color:#f59e0b22}
+.badge--approved{color:#065f46; background:#d1fae5; border-color:#10b98122}
+.badge--rejected{color:#991b1b; background:#fee2e2; border-color:#ef444422}
+
+.loan-body{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+  padding:14px 16px;
+}
+.kv{background:#fafafa; border:1px dashed var(--line); border-radius:12px; padding:10px 12px}
+.kv .k{display:block; color:var(--muted); font-size:.78rem}
+.kv .v{display:block; font-weight:800; font-size:1.05rem}
+
+.loan-notes{
+  display:flex; align-items:flex-start; gap:8px; padding:10px 16px;
+  border-top:1px dashed var(--line); color:#374151; background:#fcfcfd;
+}
+
+.loan-foot{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 16px; border-top:1px solid var(--line);
+}
+.hint{color:var(--muted); font-size:.9rem}
+.hint.success{color:var(--approved)}
+.hint.danger{color:var(--rejected)}
+
+.pagination{margin-top:14px}

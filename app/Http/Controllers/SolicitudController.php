@@ -14,44 +14,43 @@ class SolicitudController extends Controller
     }
 
     /**
-     * Mostrar listado de solicitudes según rol:
-     * - super-admin y admin ven todas las solicitudes
-     * - user ve solo sus propias solicitudes
+     * Listado de solicitudes:
+     * - super-admin y admin ven todas
+     * - user ve sólo las suyas
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         $query = Solicitud::query();
 
-        if (! $user->hasAnyRole(['super-admin', 'admin'])) {
+        if (!$user->hasAnyRole(['super-admin', 'admin'])) {
             $query->where('user_id', $user->id);
         }
 
+        // Orden por defecto: recientes
         $solicitudes = $query->latest()->get();
 
         return view('solicitudes.index', compact('solicitudes'));
     }
 
     /**
-     * Mostrar el formulario para crear una nueva solicitud.
+     * Formulario nueva solicitud
      */
     public function create(Request $request)
     {
-        // Si quieres depurar:
-        // dd(
-        //     'Roles: ' . $request->user()->getRoleNames()->join(', '),
-        //     'hasRole("user")? ' . ($request->user()->hasRole('user') ? '✅' : '❌')
-        // );
-
         return view('solicitudes.create');
     }
 
     /**
-     * Almacenar una nueva solicitud en la base de datos.
+     * Guardar nueva solicitud
      */
     public function store(Request $request)
     {
-        // 1) Validación
+        // Sanitizar monto: dejar SÓLO dígitos (permite que el usuario escriba 20.000.000)
+        $rawMonto = preg_replace('/\D+/', '', (string) $request->input('monto_solicitado'));
+        $request->merge(['monto_solicitado' => $rawMonto ?: null]);
+
+        // 1) Validación con nombres reales de columnas
         $data = $request->validate([
             'nombre_completo'   => 'required|string|max:255',
             'identificacion'    => 'required|numeric',
@@ -60,27 +59,24 @@ class SolicitudController extends Controller
             'telefono'          => 'required|numeric',
             'direccion'         => 'required|string|max:255',
             'empresa'           => 'nullable|string|max:255',
-            'monto_solicitado'  => 'required|numeric',
+            'monto_solicitado'  => 'required|numeric|min:1',
             'plazo_meses'       => 'required|integer|min:1',
         ]);
 
         // 2) Campos adicionales
-        $data['user_id']     = auth()->id();
-        $data['status']      = 'pendiente';
-        $data['tasa_interes']= 2.2;
+        $data['user_id']      = auth()->id();
+        $data['status']       = 'pendiente';
+        $data['tasa_interes'] = 2.2; // si luego lo tomas de parámetro, cámbialo aquí
 
-        // 3) Crear registro
+        // 3) Crear
         Solicitud::create($data);
 
-        // 4) Redirigir con mensaje
+        // 4) Redirigir
         return redirect()
             ->route('solicitudes.index')
             ->with('success', '¡Solicitud enviada con éxito!');
     }
 
-    /**
-     * Aprobar una solicitud (sólo admin/super-admin).
-     */
     public function approve(Solicitud $solicitud)
     {
         $solicitud->update([
@@ -91,9 +87,6 @@ class SolicitudController extends Controller
         return back()->with('success', 'Solicitud aprobada.');
     }
 
-    /**
-     * Rechazar una solicitud (sólo admin/super-admin).
-     */
     public function reject(Solicitud $solicitud)
     {
         $solicitud->update(['status' => 'rechazada']);
@@ -101,9 +94,6 @@ class SolicitudController extends Controller
         return back()->with('success', 'Solicitud rechazada.');
     }
 
-    /**
-     * Mostrar informes agregados (sólo admin/super-admin).
-     */
     public function informes()
     {
         $stats = Solicitud::selectRaw(

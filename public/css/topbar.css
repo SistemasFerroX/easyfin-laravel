@@ -1,0 +1,39 @@
+:root{
+  --sidebar-w: 100px;   /* ancho real de tu sidebar */
+  --logo-space: 130px;  /* espacio reservado para el logo dentro de la topbar */
+}
+
+@media (max-width:1024px){
+  :root{ --sidebar-w: 0px; --logo-space: 0px; }
+}
+
+/* La topbar y el contenido se corren para no quedar bajo la sidebar */
+.app-topbar{
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  padding-left: var(--sidebar-w);
+}
+.app-main{
+  padding-left: var(--sidebar-w);
+}
+
+/* >>> ESTA ES LA CLAVE: reserva espacio para el logo y vence a px-2/sm:px-3 de Tailwind */
+.app-topbar .topbar-inner{
+  padding-left: var(--logo-space) !important;
+}
+
+/* Logo colocado en el gutter (zona izquierda) */
+.topbar-logo{
+  position: absolute;       /* relativo a .app-topbar */
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  z-index: 70;
+}
+.topbar-logo img{
+  height: 28px;             /* tamaño del logo */
+  width: auto;
+}

@@ -7,57 +7,61 @@
 
   <title>{{ config('app.name', 'Laravel') }}</title>
 
-  <!-- Fuentes, meta, etc. -->
+  <!-- Topbar/Layout helpers -->
+  <link rel="stylesheet" href="{{ asset('css/topbar.css') }}">
+
+  <!-- Fuentes -->
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-  <!-- CSS + JS compilados por Vite (Tailwind + Bootstrap) -->
+  <!-- CSS + JS compilados por Vite -->
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
   <!-- Splide CSS -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.3/dist/css/splide.min.css"
-  />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.3/dist/css/splide.min.css" />
 
-  <!-- Estilos extra sólo para dashboard -->
+  <!-- Estilos extra por página -->
   @stack('styles')
 </head>
 <body class="font-sans antialiased">
   <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-    @include('layouts.navigation')
 
-    {{-- Cabecera sólo si la sección 'header' está definida --}}
+    {{-- TOPBAR (está desplazada por la sidebar vía .app-topbar) --}}
+    @include('layouts.navigation') {{-- asegúrate que <nav> tenga class="app-topbar ..." --}}
+
+    {{-- Cabecera opcional, también desplazada --}}
     @if (View::hasSection('header'))
-      <header class="bg-white dark:bg-gray-800 shadow">
+      <header class="app-main bg-white dark:bg-gray-800 shadow">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           @yield('header')
         </div>
       </header>
     @endif
 
-    {{-- Contenido principal --}}
-    <main>
+    {{-- Contenido principal desplazado por la sidebar --}}
+    <main class="app-main">
       @yield('content')
     </main>
   </div>
 
-  <!-- Splide JS y script de inicialización -->
+  <!-- Splide JS e init -->
   <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.3/dist/js/splide.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      new Splide('#bannerSplide', {
-        type      : 'loop',
-        perPage   : 1,
-        autoplay  : true,
-        interval  : 4000,
-        pagination: false,
-        arrows    : false,
-      }).mount();
+      const el = document.getElementById('bannerSplide');
+      if (el) {
+        new Splide(el, {
+          type: 'loop',
+          perPage: 1,
+          autoplay: true,
+          interval: 4000,
+          pagination: false,
+          arrows: false,
+        }).mount();
+      }
     });
   </script>
 
-  <!-- Scripts adicionales -->
   @stack('scripts')
 </body>
 </html>

@@ -1,11 +1,37 @@
-* text=auto
+# Normaliza todo a texto y fuerza LF en el working tree
+* text=auto eol=lf
 
+# Archivos de Windows que sí deben ir con CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Tipos binarios (no tocar EOL ni diffs)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.7z   binary
+*.gz   binary
+*.tar  binary
+*.ttf  binary
+*.otf  binary
+*.woff binary
+*.woff2 binary
+
+# Diff drivers útiles
 *.blade.php diff=html
-*.css diff=css
-*.html diff=html
-*.md diff=markdown
-*.php diff=php
+*.css       diff=css
+*.html      diff=html
+*.md        diff=markdown
+*.php       diff=php
+composer.lock -diff
 
-/.github export-ignore
-CHANGELOG.md export-ignore
-.styleci.yml export-ignore
+# Empaquetado: no incluir estos archivos en export
+/.github        export-ignore
+CHANGELOG.md    export-ignore
+.styleci.yml    export-ignore
