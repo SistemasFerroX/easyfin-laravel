@@ -39,43 +39,52 @@
         <div class="grid-2">
           <div class="field">
             <label for="nombre_completo">Nombre Completo *</label>
-            <input id="nombre_completo" name="nombre_completo" type="text" value="{{ old('nombre_completo') }}" required>
+            <input id="nombre_completo" name="nombre_completo" type="text"
+                   value="{{ old('nombre_completo') }}" maxlength="255" required>
             @error('nombre_completo') <small class="error">{{ $message }}</small> @enderror
           </div>
 
           <div class="field">
             <label for="identificacion">Identificación *</label>
-            <input id="identificacion" name="identificacion" type="text" value="{{ old('identificacion') }}" required>
+            <input id="identificacion" name="identificacion" type="text"
+                   inputmode="numeric" pattern="\d+" maxlength="20"
+                   value="{{ old('identificacion') }}" required>
             @error('identificacion') <small class="error">{{ $message }}</small> @enderror
           </div>
 
           <div class="field">
             <label for="fecha_nacimiento">Fecha de Nacimiento *</label>
-            <input id="fecha_nacimiento" name="fecha_nacimiento" type="date" value="{{ old('fecha_nacimiento') }}" required>
+            <input id="fecha_nacimiento" name="fecha_nacimiento" type="date"
+                   value="{{ old('fecha_nacimiento') }}" required>
             @error('fecha_nacimiento') <small class="error">{{ $message }}</small> @enderror
           </div>
 
           <div class="field">
             <label for="email">Correo Electrónico *</label>
-            <input id="email" name="email" type="email" value="{{ old('email') }}" required>
+            <input id="email" name="email" type="email" maxlength="255"
+                   value="{{ old('email') }}" required>
             @error('email') <small class="error">{{ $message }}</small> @enderror
           </div>
 
           <div class="field">
             <label for="telefono">Teléfono *</label>
-            <input id="telefono" name="telefono" type="text" value="{{ old('telefono') }}" required>
+            <input id="telefono" name="telefono" type="text"
+                   inputmode="numeric" pattern="\d{7,15}" maxlength="15"
+                   value="{{ old('telefono') }}" required>
             @error('telefono') <small class="error">{{ $message }}</small> @enderror
           </div>
 
           <div class="field">
             <label for="direccion">Dirección *</label>
-            <input id="direccion" name="direccion" type="text" value="{{ old('direccion') }}" required>
+            <input id="direccion" name="direccion" type="text" maxlength="255"
+                   value="{{ old('direccion') }}" required>
             @error('direccion') <small class="error">{{ $message }}</small> @enderror
           </div>
 
           <div class="field">
             <label for="empresa">Empresa</label>
-            <input id="empresa" name="empresa" type="text" value="{{ old('empresa') }}">
+            <input id="empresa" name="empresa" type="text" maxlength="255"
+                   value="{{ old('empresa') }}">
             @error('empresa') <small class="error">{{ $message }}</small> @enderror
           </div>
         </div>
@@ -94,13 +103,13 @@
             <div class="input-group">
               <input id="monto_solicitado_ui" type="text" inputmode="numeric" autocomplete="off"
                      value="{{ old('monto_solicitado') ? number_format(old('monto_solicitado'), 0, ',', '.') : '' }}"
-                     placeholder="0" data-money required>
+                     placeholder="0" data-money data-max="999999999999" required>
               <span class="suffix">COP</span>
             </div>
             {{-- el valor que se envía al back (sin puntos) --}}
             <input type="hidden" name="monto_solicitado" id="monto_solicitado">
             @error('monto_solicitado') <small class="error">{{ $message }}</small> @enderror
-            <small class="help">Ej: 20.000.000</small>
+            <small class="help">Máximo: 999.999.999.999</small>
           </div>
 
           <div class="field">
@@ -118,7 +127,8 @@
 
           <div class="field span-2">
             <label for="observaciones">Observaciones</label>
-            <textarea id="observaciones" name="observaciones" rows="3" placeholder="Información adicional que quieras compartir...">{{ old('observaciones') }}</textarea>
+            <textarea id="observaciones" name="observaciones" rows="3" maxlength="1000"
+                      placeholder="Información adicional que quieras compartir...">{{ old('observaciones') }}</textarea>
             @error('observaciones') <small class="error">{{ $message }}</small> @enderror
           </div>
         </div>
@@ -135,25 +145,50 @@
 
 @push('scripts')
 <script>
-  // Formato de moneda (es-CO) en UI; el hidden envía sólo dígitos
+  // Formato de moneda (es-CO) en UI; el hidden envía sólo dígitos + tope máximo
   (function(){
-    const ui = document.getElementById('monto_solicitado_ui');
+    const ui     = document.getElementById('monto_solicitado_ui');
     const hidden = document.getElementById('monto_solicitado');
-    const form = document.getElementById('solicitudForm');
+    const form   = document.getElementById('solicitudForm');
     if(!ui || !hidden || !form) return;
 
-    const fmt = new Intl.NumberFormat('es-CO');
-    const onlyNums = s => (s||'').replace(/\D+/g,'');
+    const fmt     = new Intl.NumberFormat('es-CO');
+    const onlyNum = s => (s||'').replace(/\D+/g,'');
+    const MAX     = parseInt(ui.dataset.max || '999999999999', 10);
 
-    if(ui.value.trim()){ ui.value = fmt.format(parseInt(onlyNums(ui.value))); }
+    if(ui.value.trim()){ ui.value = fmt.format(parseInt(onlyNum(ui.value)||'0',10)); }
 
     ui.addEventListener('input', e => {
-      const raw = onlyNums(e.target.value);
+      const raw = onlyNum(e.target.value);
       ui.value = raw ? fmt.format(parseInt(raw,10)) : '';
+      ui.setCustomValidity(''); // limpia mensajes previos
     });
 
-    form.addEventListener('submit', () => {
-      hidden.value = onlyNums(ui.value);
+    form.addEventListener('submit', (ev) => {
+      const raw = onlyNum(ui.value);
+      hidden.value = raw;
+
+      // Validaciones básicas del lado cliente
+      if(!raw){
+        ui.setCustomValidity('Ingresa un monto válido.');
+        ui.reportValidity();
+        ev.preventDefault();
+        return;
+      }
+      const n = parseInt(raw,10);
+      if(n < 1){
+        ui.setCustomValidity('El monto debe ser mayor a 0.');
+        ui.reportValidity();
+        ev.preventDefault();
+        return;
+      }
+      if(n > MAX){
+        ui.setCustomValidity('El monto máximo permitido es ' + fmt.format(MAX));
+        ui.reportValidity();
+        ev.preventDefault();
+        return;
+      }
+      ui.setCustomValidity('');
     });
   })();
 </script>

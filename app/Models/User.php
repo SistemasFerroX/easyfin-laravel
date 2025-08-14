@@ -6,16 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;  // <–– Importa el trait
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;  // <–– Añádelo aquí
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Atributos asignables en masa.
      */
     protected $fillable = [
         'name',
@@ -24,9 +22,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
+     * Atributos ocultos para arrays/JSON.
      */
     protected $hidden = [
         'password',
@@ -34,11 +30,10 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
+     * Casts de atributos.
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+
     ];
 }

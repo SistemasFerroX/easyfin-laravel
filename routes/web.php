@@ -1,92 +1,94 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\SolicitudController;
-use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SolicitudController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\SolicitudAdminController;
+
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Públicas
 |--------------------------------------------------------------------------
 */
+Route::get('/', fn () => view('welcome'))->name('welcome');
 
-// Ruta pública de bienvenida
-Route::get('/', fn() => view('welcome'))->name('welcome');
-
-// Rutas de autenticación (login, registro, etc.)
-require __DIR__ . '/auth.php';
+// Auth scaffolding (login/registro/etc.)
+require __DIR__.'/auth.php';
 
 /*
 |--------------------------------------------------------------------------
-| Rutas protegidas (cualquier usuario autenticado)
+| Autenticadas (todos los roles)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    // Dashboard: todos los roles
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-         ->name('dashboard');
 
-    // Ver el listado de solicitudes (user, admin y super-admin)
-    Route::get('solicitudes', [SolicitudController::class, 'index'])
-         ->name('solicitudes.index');
+    // Dashboard (todos)
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // CREAR y GUARDAR solicitud: solo role = user
+    /*
+     | Mis solicitudes (USUARIO)
+     | - /solicitudes           => SOLO pendientes del usuario
+     | - /solicitudes/historial => Aprobadas + Rechazadas del usuario
+     */
+    Route::get('solicitudes',               [SolicitudController::class, 'index'])->name('solicitudes.index');
+    Route::get('solicitudes/historial',     [SolicitudController::class, 'history'])->name('solicitudes.history');
+
+    // Crear/guardar solicitud (sólo usuario final)
     Route::middleware('role:user')->group(function () {
-        Route::get('solicitudes/create', [SolicitudController::class, 'create'])
-             ->name('solicitudes.create');
-        Route::post('solicitudes', [SolicitudController::class, 'store'])
-             ->name('solicitudes.store');
+        Route::get('solicitudes/create', [SolicitudController::class, 'create'])->name('solicitudes.create');
+        Route::post('solicitudes',        [SolicitudController::class, 'store'])->name('solicitudes.store');
+
+        // Respuesta del usuario a la contraoferta del admin
+        Route::post('solicitudes/{solicitud}/propuesta/aceptar',  [SolicitudController::class, 'acceptProposal'])
+            ->name('solicitudes.propuesta.aceptar');
+        Route::post('solicitudes/{solicitud}/propuesta/rechazar', [SolicitudController::class, 'rejectProposal'])
+            ->name('solicitudes.propuesta.rechazar');
     });
 
-    // Aprobar, rechazar e informes: solo admin o super-admin
+    // Informes (sólo admin / super-admin)
     Route::middleware('role:admin|super-admin')->group(function () {
-        Route::post('solicitudes/{solicitud}/approve', [SolicitudController::class, 'approve'])
-             ->name('solicitudes.approve');
-        Route::post('solicitudes/{solicitud}/reject', [SolicitudController::class, 'reject'])
-             ->name('solicitudes.reject');
-        Route::get('informes', [SolicitudController::class, 'informes'])
-             ->name('informes');
+        Route::get('informes', [SolicitudController::class, 'informes'])->name('informes');
     });
 
-    // Perfil del propio usuario
-    Route::get('/profile',    [ProfileController::class, 'edit'])
-         ->name('profile.edit');
-    Route::patch('/profile',  [ProfileController::class, 'update'])
-         ->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])
-         ->name('profile.destroy');
+    // Perfil (propio)
+    Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 /*
 |--------------------------------------------------------------------------
 | Panel de Administración
 |--------------------------------------------------------------------------
-| - Dashboard de admin: roles admin y super-admin
-| - Gestión completa de usuarios: solo super-admin
+| - /admin/solicitudes           => SOLO pendientes (todas)
+| - /admin/solicitudes/historial => Aprobadas + Rechazadas (todas)
 */
-// Dashboard de admin/super-admin
-Route::middleware(['auth', 'role:admin|super-admin'])->group(function () {
-    Route::get('admin', [AdminController::class, 'index'])
-         ->name('admin.dashboard');
-});
+Route::middleware(['auth', 'role:admin|super-admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-// Gestión de usuarios (solo super-admin)
-Route::middleware(['auth', 'role:super-admin'])
-     ->prefix('admin')
-     ->name('admin.')
-     ->group(function () {
-         Route::get('users',            [AdminController::class, 'users'])
-              ->name('users.index');
-         Route::get('users/create',     [AdminController::class, 'createUser'])
-              ->name('users.create');
-         Route::post('users',           [AdminController::class, 'storeUser'])
-              ->name('users.store');
-         Route::get('users/{user}/edit',[AdminController::class, 'editUser'])
-              ->name('users.edit');
-         Route::put('users/{user}',     [AdminController::class, 'updateUser'])
-              ->name('users.update');
-         Route::delete('users/{user}',  [AdminController::class, 'destroyUser'])
-              ->name('users.destroy');
-     });
+        // Dashboard Admin
+        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+        // Solicitudes (Admin)
+        Route::get('solicitudes',                 [SolicitudAdminController::class, 'index'])->name('solicitudes.index');
+        Route::get('solicitudes/historial',       [SolicitudAdminController::class, 'history'])->name('solicitudes.history');
+
+        Route::post('solicitudes/{solicitud}/approve', [SolicitudAdminController::class, 'approve'])->name('solicitudes.approve');
+        Route::post('solicitudes/{solicitud}/reject',  [SolicitudAdminController::class, 'reject'])->name('solicitudes.reject');
+        Route::post('solicitudes/{solicitud}/counter', [SolicitudAdminController::class, 'counter'])->name('solicitudes.counter');
+
+        // Gestión de usuarios (sólo super-admin)
+        Route::middleware('role:super-admin')->group(function () {
+            Route::get('users',             [AdminController::class, 'users'])->name('users.index');
+            Route::get('users/create',      [AdminController::class, 'createUser'])->name('users.create');
+            Route::post('users',            [AdminController::class, 'storeUser'])->name('users.store');
+            Route::get('users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
+            Route::put('users/{user}',      [AdminController::class, 'updateUser'])->name('users.update');
+            Route::delete('users/{user}',   [AdminController::class, 'destroyUser'])->name('users.destroy');
+        });
+    });
