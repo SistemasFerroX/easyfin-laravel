@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\SolicitudAdminController;
+use App\Http\Controllers\PdfSolicitudController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,8 +15,6 @@ use App\Http\Controllers\Admin\SolicitudAdminController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', fn () => view('welcome'))->name('welcome');
-
-// Auth scaffolding (login/registro/etc.)
 require __DIR__.'/auth.php';
 
 /*
@@ -28,32 +27,35 @@ Route::middleware('auth')->group(function () {
     // Dashboard (todos)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    /*
-     | Mis solicitudes (USUARIO)
-     | - /solicitudes           => SOLO pendientes del usuario
-     | - /solicitudes/historial => Aprobadas + Rechazadas del usuario
-     */
-    Route::get('solicitudes',               [SolicitudController::class, 'index'])->name('solicitudes.index');
-    Route::get('solicitudes/historial',     [SolicitudController::class, 'history'])->name('solicitudes.history');
+    // Mis solicitudes (USUARIO)
+    Route::get('solicitudes',           [SolicitudController::class, 'index'])->name('solicitudes.index');
+    Route::get('solicitudes/historial', [SolicitudController::class, 'history'])->name('solicitudes.history');
 
-    // Crear/guardar solicitud (sólo usuario final)
+    // PDFs del USUARIO: SOLO amortización de su propia solicitud
+    Route::get('solicitudes/{solicitud}/pdf/amortizacion',
+        [PdfSolicitudController::class, 'amortizacion']
+    )->name('solicitudes.pdf.amortizacion');
+
+    // Crear / guardar / responder propuesta (solo role:user)
     Route::middleware('role:user')->group(function () {
         Route::get('solicitudes/create', [SolicitudController::class, 'create'])->name('solicitudes.create');
-        Route::post('solicitudes',        [SolicitudController::class, 'store'])->name('solicitudes.store');
+        Route::post('solicitudes',       [SolicitudController::class, 'store'])->name('solicitudes.store');
 
-        // Respuesta del usuario a la contraoferta del admin
-        Route::post('solicitudes/{solicitud}/propuesta/aceptar',  [SolicitudController::class, 'acceptProposal'])
-            ->name('solicitudes.propuesta.aceptar');
-        Route::post('solicitudes/{solicitud}/propuesta/rechazar', [SolicitudController::class, 'rejectProposal'])
-            ->name('solicitudes.propuesta.rechazar');
+        Route::post('solicitudes/{solicitud}/propuesta/aceptar',
+            [SolicitudController::class, 'acceptProposal']
+        )->name('solicitudes.propuesta.aceptar');
+
+        Route::post('solicitudes/{solicitud}/propuesta/rechazar',
+            [SolicitudController::class, 'rejectProposal']
+        )->name('solicitudes.propuesta.rechazar');
     });
 
-    // Informes (sólo admin / super-admin)
+    // Informes (solo admin / super-admin)
     Route::middleware('role:admin|super-admin')->group(function () {
         Route::get('informes', [SolicitudController::class, 'informes'])->name('informes');
     });
 
-    // Perfil (propio)
+    // Perfil
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -61,28 +63,57 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Panel de Administración
+| Panel de Administración (admin / super-admin)
 |--------------------------------------------------------------------------
-| - /admin/solicitudes           => SOLO pendientes (todas)
-| - /admin/solicitudes/historial => Aprobadas + Rechazadas (todas)
+| - /admin/solicitudes           => pendientes
+| - /admin/solicitudes/historial => aprobadas + rechazadas
 */
 Route::middleware(['auth', 'role:admin|super-admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-        // Dashboard Admin
         Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
         // Solicitudes (Admin)
-        Route::get('solicitudes',                 [SolicitudAdminController::class, 'index'])->name('solicitudes.index');
-        Route::get('solicitudes/historial',       [SolicitudAdminController::class, 'history'])->name('solicitudes.history');
+        Route::get('solicitudes',           [SolicitudAdminController::class, 'index'])->name('solicitudes.index');
+        Route::get('solicitudes/historial', [SolicitudAdminController::class, 'history'])->name('solicitudes.history');
 
         Route::post('solicitudes/{solicitud}/approve', [SolicitudAdminController::class, 'approve'])->name('solicitudes.approve');
         Route::post('solicitudes/{solicitud}/reject',  [SolicitudAdminController::class, 'reject'])->name('solicitudes.reject');
         Route::post('solicitudes/{solicitud}/counter', [SolicitudAdminController::class, 'counter'])->name('solicitudes.counter');
 
-        // Gestión de usuarios (sólo super-admin)
+        // Descargar PDFs generados (Admin/Super): amortización + certificado
+        Route::get('solicitudes/{solicitud}/pdf/amortizacion',
+            [PdfSolicitudController::class, 'amortizacion']
+        )->name('solicitudes.pdf.amortizacion');
+
+        Route::get('solicitudes/{solicitud}/pdf/certificado',
+            [PdfSolicitudController::class, 'certificado']
+        )->name('solicitudes.pdf.certificado');
+
+        // === NUEVO: Adjuntos y documentos ===
+
+        // Subir/actualizar PDF del admin (visible para todos los admins)
+        Route::post('solicitudes/{solicitud}/admin-pdf',
+            [SolicitudAdminController::class, 'uploadAdminPdf']
+        )->name('solicitudes.adminpdf.upload');
+
+        // Ver/descargar el PDF del admin
+        Route::get('solicitudes/{solicitud}/admin-pdf',
+            [SolicitudAdminController::class, 'viewAdminPdf']
+        )->name('solicitudes.adminpdf.view');
+
+        // Ver cédula y certificado bancario subidos por el usuario (solo admin/super)
+        Route::get('solicitudes/{solicitud}/doc/cedula',
+            [SolicitudAdminController::class, 'viewUserDoc']
+        )->defaults('tipo','cedula')->name('solicitudes.doc.cedula');
+
+        Route::get('solicitudes/{solicitud}/doc/banco',
+            [SolicitudAdminController::class, 'viewUserDoc']
+        )->defaults('tipo','banco')->name('solicitudes.doc.banco');
+
+        // Gestión de usuarios (solo super-admin)
         Route::middleware('role:super-admin')->group(function () {
             Route::get('users',             [AdminController::class, 'users'])->name('users.index');
             Route::get('users/create',      [AdminController::class, 'createUser'])->name('users.create');

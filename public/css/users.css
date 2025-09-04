@@ -1,0 +1,40 @@
+/* ====== Users (tablas + forms) ====== */
+
+.card.table-card{
+  background:#fff; border:1px solid var(--line); border-radius:16px;
+  box-shadow:var(--shadow); overflow:hidden;
+}
+
+.nice-table{ width:100%; border-collapse:separate; border-spacing:0; }
+.nice-table thead th{
+  text-align:left; font-weight:700; font-size:.9rem;
+  background:linear-gradient(180deg,#fff, #fafbff);
+  border-bottom:1px solid var(--line); padding:12px 14px;
+}
+.nice-table tbody td{ padding:12px 14px; border-top:1px solid #f3f4f6; }
+.nice-table tbody tr:hover{ background:#fcfcfe; }
+
+.txt-right{ text-align:right; }
+.txt-center{ text-align:center; }
+.inline{ display:inline; }
+.py-4{ padding:16px 0; }
+.mt-2{ margin-top:8px; }
+
+/* compact buttons for table actions */
+.btn-ghost.sm, .btn-danger.sm{ padding:6px 10px; border-radius:10px; font-size:.85rem; }
+.actions form{ display:inline-block; margin-left:6px; }
+
+/* Form container already exists as .form-card in tu solicitud.css; here just tweaks */
+.form-card{
+  background:#fff; border:1px solid var(--line); border-radius:18px;
+  padding:16px; box-shadow:var(--shadow);
+}
+.field label{ font-weight:600; color:#334155; margin-bottom:6px; display:block; }
+.field input, .field select, .field textarea{
+  width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px;
+  outline:none; background:#fff;
+}
+.field input.invalid, .field select.invalid, .field textarea.invalid{
+  border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.15);
+}
+.form-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }

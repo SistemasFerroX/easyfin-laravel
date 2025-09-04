@@ -26,7 +26,7 @@
       <div class="alert success">{{ session('status') }}</div>
     @endif
 
-    <form method="POST" action="{{ route('solicitudes.store') }}" id="solicitudForm" novalidate>
+    <form method="POST" action="{{ route('solicitudes.store') }}" id="solicitudForm" novalidate enctype="multipart/form-data">
       @csrf
 
       {{-- 1. Datos personales --}}
@@ -42,6 +42,16 @@
             <input id="nombre_completo" name="nombre_completo" type="text"
                    value="{{ old('nombre_completo') }}" maxlength="255" required>
             @error('nombre_completo') <small class="error">{{ $message }}</small> @enderror
+          </div>
+
+          <div class="field">
+            <label for="tipo_documento">Tipo de Documento *</label>
+            <select id="tipo_documento" name="tipo_documento" required>
+              @foreach(($docTypes ?? ['cc','ce','ppt']) as $t)
+                <option value="{{ $t }}" @selected(old('tipo_documento')===$t)>{{ strtoupper($t) }}</option>
+              @endforeach
+            </select>
+            @error('tipo_documento') <small class="error">{{ $message }}</small> @enderror
           </div>
 
           <div class="field">
@@ -81,11 +91,39 @@
             @error('direccion') <small class="error">{{ $message }}</small> @enderror
           </div>
 
+          @php
+            // Detectamos la clave de la empresa que requiere adjuntos (Bravass)
+            $requiresKey = collect($companies ?? [])->filter(fn($c) => ($c['nit'] ?? '') === '800148853-4')->keys()->first();
+          @endphp
           <div class="field">
-            <label for="empresa">Empresa</label>
-            <input id="empresa" name="empresa" type="text" maxlength="255"
-                   value="{{ old('empresa') }}">
-            @error('empresa') <small class="error">{{ $message }}</small> @enderror
+            <label for="empresa_key">Empresa *</label>
+            <select id="empresa_key" name="empresa_key" required data-requires-key="{{ $requiresKey }}">
+              <option value="" disabled {{ old('empresa_key') ? '' : 'selected' }}>Selecciona una empresa…</option>
+              @foreach(($companies ?? []) as $key => $c)
+                <option value="{{ $key }}" @selected(old('empresa_key')===$key)">
+                  {{ $c['name'] }}{{ !empty($c['nit']) ? ' — NIT '.$c['nit'] : '' }}
+                </option>
+              @endforeach
+            </select>
+            @error('empresa_key') <small class="error">{{ $message }}</small> @enderror
+            <small class="help">Este campo reemplaza el texto libre de “Empresa”.</small>
+          </div>
+        </div>
+
+        {{-- Adjuntos obligatorios SOLO para Confecciones Bravass (800148853-4) --}}
+        <div id="adjuntosBravass" class="grid-2 hidden" aria-live="polite">
+          <div class="field">
+            <label for="doc_cedula">Fotocopia de la cédula (PDF/JPG/PNG) *</label>
+            <input id="doc_cedula" name="doc_cedula" type="file" accept=".pdf,.jpg,.jpeg,.png" disabled>
+            @error('doc_cedula') <small class="error">{{ $message }}</small> @enderror
+          </div>
+          <div class="field">
+            <label for="cert_bancario">Certificado bancario (PDF/JPG/PNG) *</label>
+            <input id="cert_bancario" name="cert_bancario" type="file" accept=".pdf,.jpg,.jpeg,.png" disabled>
+            @error('cert_bancario') <small class="error">{{ $message }}</small> @enderror
+          </div>
+          <div class="field span-2">
+            <small class="muted">* Estos adjuntos son obligatorios para Confecciones Bravass.</small>
           </div>
         </div>
       </section>
@@ -145,7 +183,7 @@
 
 @push('scripts')
 <script>
-  // Formato de moneda (es-CO) en UI; el hidden envía sólo dígitos + tope máximo
+  // Formato de moneda (es-CO) para el monto y envío del valor "crudo" en el hidden
   (function(){
     const ui     = document.getElementById('monto_solicitado_ui');
     const hidden = document.getElementById('monto_solicitado');
@@ -161,14 +199,13 @@
     ui.addEventListener('input', e => {
       const raw = onlyNum(e.target.value);
       ui.value = raw ? fmt.format(parseInt(raw,10)) : '';
-      ui.setCustomValidity(''); // limpia mensajes previos
+      ui.setCustomValidity('');
     });
 
     form.addEventListener('submit', (ev) => {
       const raw = onlyNum(ui.value);
       hidden.value = raw;
 
-      // Validaciones básicas del lado cliente
       if(!raw){
         ui.setCustomValidity('Ingresa un monto válido.');
         ui.reportValidity();
@@ -190,6 +227,23 @@
       }
       ui.setCustomValidity('');
     });
+  })();
+
+  // Mostrar/ocultar adjuntos obligatorios si la empresa escogida es la que requiere docs (Bravass)
+  (function(){
+    const sel   = document.getElementById('empresa_key');
+    const req   = sel ? sel.dataset.requiresKey : null; // p.ej. "bravass"
+    const box   = document.getElementById('adjuntosBravass');
+    if(!sel || !req || !box) return;
+
+    const inputs = box.querySelectorAll('input[type="file"]');
+    function toggle(){
+      const need = sel.value === req;
+      box.classList.toggle('hidden', !need);
+      inputs.forEach(i => { i.disabled = !need; if(!need) i.value = ''; });
+    }
+    sel.addEventListener('change', toggle);
+    toggle(); // estado inicial (respeta old('empresa_key'))
   })();
 </script>
 @endpush

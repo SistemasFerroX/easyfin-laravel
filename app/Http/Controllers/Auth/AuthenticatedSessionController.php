@@ -13,7 +13,7 @@ use Illuminate\View\View;
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Vista de login.
      */
     public function create(): View
     {
@@ -21,28 +21,31 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request.
+     * Procesar login.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
+        // Si quieres forzar siempre /dashboard, usa:
+        // return redirect()->route('dashboard');
+
+        // Por defecto respeta la URL previa (intended) o HOME:
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Logout -> redirigir al login con mensaje.
      */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Antes: return redirect('/');
+        return to_route('login')->with('status', 'Has cerrado sesión.');
     }
 }

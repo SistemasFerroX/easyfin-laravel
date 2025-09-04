@@ -28,7 +28,7 @@
   @if(session('success')) <div class="alert success">{{ session('success') }}</div> @endif
   @if($errors->any())     <div class="alert error">Revisa los datos del formulario.</div> @endif
 
-  {{-- Filtros (sin status; la ruta define pendientes vs historial) --}}
+  {{-- Filtros --}}
   <form method="GET"
         action="{{ ($historial ?? false) ? route('admin.solicitudes.history') : route('admin.solicitudes.index') }}"
         class="filters">
@@ -103,11 +103,15 @@
                 <h4>Solicitante</h4>
                 <ul class="info-list">
                   <li><b>Nombre:</b> {{ $s->nombre_completo }}</li>
+                  <li><b>Tipo doc.:</b> {{ strtoupper($s->tipo_documento ?? '—') }}</li>
                   <li><b>Identificación:</b> {{ $s->identificacion }}</li>
                   <li><b>Correo:</b> {{ $s->email }}</li>
                   <li><b>Teléfono:</b> {{ $s->telefono }}</li>
                   <li><b>Dirección:</b> {{ $s->direccion }}</li>
                   <li><b>Empresa:</b> {{ $s->empresa ?: '—' }}</li>
+                  @if($s->empresa_nit)
+                    <li><b>NIT:</b> {{ $s->empresa_nit }}</li>
+                  @endif
                   <li><b>Nacimiento:</b> {{ optional($s->fecha_nacimiento)->format('Y-m-d') }}</li>
                 </ul>
               </div>
@@ -117,7 +121,7 @@
                 <ul class="info-list">
                   <li><b>Monto:</b> ${{ number_format($s->monto_solicitado,0,',','.') }}</li>
                   <li><b>Plazo:</b> {{ $s->plazo_meses }} meses</li>
-                  <li><b>Estado:</b> {{ $s->status }}</li>
+                  <li><b>Estado:</b> {{ ucfirst($s->status) }}</li>
                   <li><b>Tasa:</b>
                     @if(!is_null($s->tasa_interes))
                       {{ rtrim(rtrim(number_format($s->tasa_interes,2,',','.'),'0'),',') }}% EA
@@ -128,61 +132,144 @@
                   <div class="note"><b>Obs.:</b> {{ $s->observaciones }}</div>
                 @endif
               </div>
-            </div>
 
-            {{-- Enviar propuesta (contraoferta) --}}
-            <form id="offer-{{ $s->id }}-form" method="POST" action="{{ route('admin.solicitudes.counter',$s) }}" class="offer-form">
-              @csrf
-              <h4 class="section-title">Enviar contraoferta</h4>
-              <div class="form-grid">
-                <div class="form-field">
-                  <label>Monto propuesto</label>
-                  <input type="number" name="propuesta_monto"
-                         step="1" min="1" max="999999999999"
-                         value="{{ old('propuesta_monto', $s->propuesta_monto ?? $s->monto_solicitado) }}">
+              {{-- Documentos del usuario (si existen) --}}
+              @if($s->doc_cedula_path || $s->cert_bancario_path)
+                <div class="info-card">
+                  <h4>Documentos del usuario</h4>
+                  <div class="actions-inline">
+                    @if($s->doc_cedula_path)
+                      <a class="btn-ghost" href="{{ Storage::url($s->doc_cedula_path) }}" target="_blank" rel="noopener">
+                        Cédula (PDF)
+                      </a>
+                    @endif
+                    @if($s->cert_bancario_path)
+                      <a class="btn-ghost" href="{{ Storage::url($s->cert_bancario_path) }}" target="_blank" rel="noopener">
+                        Certificado bancario (PDF)
+                      </a>
+                    @endif
+                  </div>
                 </div>
-                <div class="form-field">
-                  <label>Plazo (meses)</label>
-                  <input type="number" name="propuesta_plazo_meses"
-                         step="1" min="1" max="360"
-                         value="{{ old('propuesta_plazo_meses', $s->propuesta_plazo_meses ?? $s->plazo_meses) }}">
-                </div>
-                <div class="form-field col-span-2">
-                  <label>Mensaje</label>
-                  <input type="text" name="propuesta_mensaje" maxlength="1000"
-                         value="{{ old('propuesta_mensaje', $s->propuesta_mensaje) }}"
-                         placeholder="Ej.: no es viable por 10M a 12m, pero podemos 6M a 12m o 10M a 15m">
-                </div>
+              @endif
+
+              {{-- Documento interno del admin (subida/visualización) --}}
+              <div class="info-card">
+                <h4>Documento interno (Admin)</h4>
+
+                @if($s->admin_pdf_path)
+                  <p class="mb-2">
+                    <a class="btn-ghost" href="{{ Storage::url($s->admin_pdf_path) }}" target="_blank" rel="noopener">
+                      Ver PDF adjunto
+                    </a>
+                  </p>
+                @endif
+
+                <form method="POST"
+                      action="{{ route('admin.solicitudes.adminpdf', $s) }}"
+                      enctype="multipart/form-data" class="actions-inline">
+                  @csrf
+                  <input type="file" name="admin_pdf" accept="application/pdf" required>
+                  <button class="btn-primary" type="submit">
+                    {{ $s->admin_pdf_path ? 'Reemplazar PDF' : 'Subir PDF' }}
+                  </button>
+                </form>
+                <small class="muted">Solo visible para administradores.</small>
               </div>
 
-              <div class="actions-inline">
-                <button class="btn-primary" type="submit">Enviar propuesta</button>
-              </div>
+              {{-- Documentos de aprobación (amortización / certificado) --}}
+              @if($estado === 'aprobada')
+                <div class="info-card">
+                  <h4>Documentos de aprobación</h4>
 
-              @if($s->propuesta_estado)
-                <div class="proposal-meta">
-                  <b>Propuesta:</b> {{ $s->propuesta_estado }}
-                  @if($s->propuesta_enviada_at)
-                    · {{ $s->propuesta_enviada_at->diffForHumans() }}
+                  @if($s->amortizacion_pdf_path || $s->certificado_pdf_path)
+                    <div class="actions-inline">
+                      @if($s->amortizacion_pdf_path)
+                        <a class="btn-ghost"
+                           href="{{ route('admin.solicitudes.pdf.amortizacion', $s) }}"
+                           target="_blank" rel="noopener">
+                          Amortización PDF
+                        </a>
+                      @endif
+
+                      @if($s->certificado_pdf_path)
+                        <a class="btn-ghost"
+                           href="{{ route('admin.solicitudes.pdf.certificado', $s) }}"
+                           target="_blank" rel="noopener">
+                          Certificado PDF
+                        </a>
+                      @endif
+                    </div>
+                  @else
+                    <p class="muted">Generando documentos…</p>
+                  @endif
+
+                  @if($s->fecha_aprobacion)
+                    <small class="muted">Aprobada el {{ optional($s->fecha_aprobacion)->format('d/m/Y H:i') }}</small>
                   @endif
                 </div>
               @endif
-            </form>
+            </div>
+
+            {{-- Contraoferta (solo pendiente) --}}
+            @if($estado === 'pendiente')
+              <form id="offer-{{ $s->id }}-form" method="POST" action="{{ route('admin.solicitudes.counter',$s) }}" class="offer-form">
+                @csrf
+                <h4 class="section-title">Enviar contraoferta</h4>
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label>Monto propuesto</label>
+                    <input type="number" name="propuesta_monto"
+                           step="1" min="1" max="999999999999"
+                           value="{{ old('propuesta_monto', $s->propuesta_monto ?? $s->monto_solicitado) }}">
+                  </div>
+                  <div class="form-field">
+                    <label>Plazo (meses)</label>
+                    <input type="number" name="propuesta_plazo_meses"
+                           step="1" min="1" max="360"
+                           value="{{ old('propuesta_plazo_meses', $s->propuesta_plazo_meses ?? $s->plazo_meses) }}">
+                  </div>
+                  <div class="form-field col-span-2">
+                    <label>Mensaje</label>
+                    <input type="text" name="propuesta_mensaje" maxlength="1000"
+                           value="{{ old('propuesta_mensaje', $s->propuesta_mensaje) }}"
+                           placeholder="Ej.: no es viable por 10M a 12m, pero podemos 6M a 12m o 10M a 15m">
+                  </div>
+                </div>
+
+                <div class="actions-inline">
+                  <button class="btn-primary" type="submit">Enviar propuesta</button>
+                </div>
+
+                @if($s->propuesta_estado)
+                  <div class="proposal-meta">
+                    <b>Propuesta:</b> {{ $s->propuesta_estado }}
+                    @if($s->propuesta_enviada_at)
+                      · {{ $s->propuesta_enviada_at->diffForHumans() }}
+                    @endif
+                  </div>
+                @endif
+              </form>
+            @endif
           </div>
 
-          {{-- Footer: Aprobar / Rechazar --}}
+          {{-- Footer: Aprobar / Rechazar (solo pendiente) --}}
           <div class="modal-footer">
             <div class="footer-actions">
-              <form method="POST" action="{{ route('admin.solicitudes.approve',$s) }}">
-                @csrf
-                <button class="btn-ghost" type="submit">Aprobar</button>
-              </form>
+              @if($estado === 'pendiente')
+                <form method="POST" action="{{ route('admin.solicitudes.approve',$s) }}"
+                      onsubmit="return confirm('¿Aprobar esta solicitud?')">
+                  @csrf
+                  <button class="btn-ghost" type="submit">Aprobar</button>
+                </form>
 
-              <form method="POST" action="{{ route('admin.solicitudes.reject',$s) }}"
-                    onsubmit="return confirm('¿Rechazar esta solicitud?')">
-                @csrf
-                <button class="btn-danger" type="submit">Rechazar</button>
-              </form>
+                <form method="POST" action="{{ route('admin.solicitudes.reject',$s) }}"
+                      onsubmit="return confirm('¿Rechazar esta solicitud?')">
+                  @csrf
+                  <button class="btn-danger" type="submit">Rechazar</button>
+                </form>
+              @else
+                <small class="muted">Esta solicitud ya fue {{ strtolower($s->status) }}.</small>
+              @endif
             </div>
           </div>
         </div>

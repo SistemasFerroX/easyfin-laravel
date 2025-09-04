@@ -5,7 +5,7 @@
   <link rel="stylesheet" href="{{ asset('css/users.css') }}">
 @endpush
 
-@section('title','EasyFin – Editar usuario')
+@section('title','EasyFin – Nuevo usuario')
 
 @section('content')
 <div class="solicitudes-wrapper">
@@ -13,58 +13,50 @@
     <div class="page-title">
       <img src="{{ asset('img/logo-easyfin.png') }}" class="brand-mark" alt="EasyFin">
       <div>
-        <h1>Editar Usuario</h1>
-        <p class="muted">{{ $user->email }}</p>
+        <h1>Nuevo usuario</h1>
+        <p class="muted">Crea cuentas para tu equipo.</p>
       </div>
     </div>
     <a href="{{ route('admin.users.index') }}" class="btn-ghost">← Volver</a>
   </header>
 
-  @if(session('success')) <div class="alert success">{{ session('success') }}</div> @endif
-  @if(session('error'))   <div class="alert error">{{ session('error') }}</div>   @endif
+  @if($errors->any()) <div class="alert error">Revisa los datos del formulario.</div> @endif
 
   <div class="form-card">
-    <form action="{{ route('admin.users.update',$user) }}" method="POST">
-      @csrf @method('PUT')
+    <form action="{{ route('admin.users.store') }}" method="POST">
+      @csrf
 
       <div class="grid-2">
         <div class="field">
           <label>Nombre</label>
-          <input type="text" name="name" value="{{ old('name',$user->name) }}"
+          <input type="text" name="name" value="{{ old('name') }}"
                  class="@error('name') invalid @enderror" required maxlength="255">
           @error('name')<small class="error">{{ $message }}</small>@enderror
         </div>
 
         <div class="field">
           <label>Email</label>
-          <input type="email" name="email" value="{{ old('email',$user->email) }}"
+          <input type="email" name="email" value="{{ old('email') }}"
                  class="@error('email') invalid @enderror" required maxlength="255">
           @error('email')<small class="error">{{ $message }}</small>@enderror
         </div>
 
-        @php $currentRole = old('role', $user->roles->first()->name ?? 'user'); @endphp
         <div class="field">
           <label>Rol</label>
           <select name="role" class="@error('role') invalid @enderror" required>
-            <option value="user"        @selected($currentRole==='user')>Usuario</option>
-            <option value="admin"       @selected($currentRole==='admin')>Admin</option>
-            <option value="super-admin" @selected($currentRole==='super-admin')>Super-admin</option>
+            <option value="user"        @selected(old('role')==='user')>Usuario</option>
+            <option value="admin"       @selected(old('role')==='admin')>Admin</option>
+            <option value="super-admin" @selected(old('role')==='super-admin')>Super-admin</option>
           </select>
           @error('role')<small class="error">{{ $message }}</small>@enderror
-          <small class="hint">Si es el <b>último super-admin</b> el sistema impedirá quitarle ese rol.</small>
-        </div>
-
-        <div class="field">
-          <label>Nueva contraseña (opcional)</label>
-          <input type="password" name="password" class="@error('password') invalid @enderror"
-                 placeholder="Déjalo vacío para no cambiar">
-          @error('password')<small class="error">{{ $message }}</small>@enderror
         </div>
       </div>
 
+      <p class="muted mt-2">Se enviará un enlace al correo para establecer la contraseña.</p>
+
       <footer class="form-actions">
         <a href="{{ route('admin.users.index') }}" class="btn-ghost">Cancelar</a>
-        <button class="btn-primary">Guardar cambios</button>
+        <button class="btn-primary">Crear usuario</button>
       </footer>
     </form>
   </div>
